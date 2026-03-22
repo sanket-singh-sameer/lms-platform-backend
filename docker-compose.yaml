@@ -1,0 +1,46 @@
+name: lms-microservices
+
+services:
+  auth:
+    container_name: lms-auth-service
+    build:
+      context: ./apps/auth-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/auth-service/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    expose:
+      - "3001"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+
+  user:
+    container_name: lms-user-service
+    build:
+      context: ./apps/user-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/user-service/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    expose:
+      - "3002"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
