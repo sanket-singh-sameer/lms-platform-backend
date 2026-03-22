@@ -1,6 +1,26 @@
 name: lms-microservices
 
 services:
+  api-gateway:
+    container_name: lms-api-gateway
+    build:
+      context: ./apps/api-gateway
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/api-gateway/.env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    expose:
+      - "3000"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+      
   auth:
     container_name: lms-auth-service
     build:
@@ -40,6 +60,7 @@ services:
     read_only: true
     networks:
       - backend
+
 
 networks:
   backend:
