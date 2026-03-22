@@ -20,7 +20,7 @@ services:
     read_only: true
     networks:
       - backend
-      
+
   auth:
     container_name: lms-auth-service
     build:
@@ -60,6 +60,27 @@ services:
     read_only: true
     networks:
       - backend
+
+  api-docs:
+    container_name: lms-api-docs
+    build:
+      context: ./apps/api-docs
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/api-docs/.env
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+      
 
 
 networks:

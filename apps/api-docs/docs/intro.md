@@ -2,46 +2,93 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# LMS API Documentation
 
-Let's discover **Docusaurus in less than 5 minutes**.
+Welcome to the **Learning Management System (LMS) API** documentation. This comprehensive guide provides everything you need to integrate with our microservices-based platform and build powerful learning experiences.
 
-## Getting Started
+## What is the LMS API?
 
-Get started by **creating a new site**.
+The LMS API is a collection of RESTful web services designed to manage users, courses, learning progress, assessments, and educational content. Built with a microservices architecture, our API enables seamless integration across authentication, user management, content delivery, and analytics.
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+## Who is this for?
 
-### What you'll need
+This documentation is designed for:
+- **Backend Developers** building integrations with the LMS platform
+- **Third-party Developers** extending LMS functionality through external tools
+- **DevOps Engineers** deploying and managing LMS infrastructure
+- **Architecture Teams** planning integration strategies
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+## Key Features
 
-## Generate a new site
+- **Authentication & Authorization** — Secure OAuth 2.0 and JWT-based authentication
+- **User Management** — Role-based access control, profile management, and organization support
+- **Course Management** — Create, organize, and manage learning content
+- **Progress Tracking** — Monitor learner advancement and completion status
+- **Assessment Engine** — Create and grade quizzes, assignments, and evaluations
+- **Analytics & Reporting** — Access detailed insights on learner engagement and outcomes
+- **Webhooks & Events** — Real-time notifications for platform events
 
-Generate a new Docusaurus site using the **classic template**.
+## Quick Start
 
-The classic template will automatically be added to your project after you run the command:
+### Prerequisites
+
+Before getting started, ensure you have:
+- An active LMS account with API credentials
+- Basic understanding of REST APIs and JSON
+- A programming language or tool for making HTTP requests (cURL, Postman, etc.)
+- Node.js 18+ (for JavaScript/TypeScript integration)
+
+### Getting Your API Credentials
+
+1. Log in to your LMS admin dashboard
+2. Navigate to **Settings > API Management**
+3. Create a new API key and secret
+4. Store credentials securely (never commit to version control)
+
+### Making Your First Request
 
 ```bash
-npm init docusaurus@latest my-website classic
+curl -X GET https://api.lms-platform.com/v1/user \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
+  -H "Content-Type: application/json"
 ```
 
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
+## Core Services
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+Our platform is organized into the following microservices:
 
-## Start your site
+### 3001: Authentication Service
+Handles user authentication, token generation, OAuth integrations, and session management. [View Documentation](./auth-service)
 
-Run the development server:
+### 3002: User Service
+Manages user profiles, roles, permissions, and organization settings. [View Documentation](./user-service)
 
-```bash
-cd my-website
-npm run start
-```
+## API Standards
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+All endpoints follow these conventions:
+- **Base URL**: `https://api.lms-platform.com/v1`
+- **Format**: JSON request/response
+- **Authentication**: Bearer token in Authorization header
+- **Rate Limits**: 1000 requests per hour
+- **API Version**: v1
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+## Explore the Documentation
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- **[Authentication Service](./auth-service)** — User authentication and token management
+- **[User Service](./user-service)** — User profiles and permissions management
+- **[Technical Blog](../blog)** — Updates, tutorials, and best practices
+
+## Support & Community
+
+- 📧 **Email**: api-support@lms-platform.com
+- 🐛 **Issues**: Report bugs via your admin dashboard
+- 💬 **Community**: Join our developer Slack channel
+- 📚 **Blog**: Check out our [Technical Blog](../blog) for updates and tutorials
+
+## What's Next?
+
+Start by exploring the specific service you need:
+- Setting up authentication? → **[Authentication Service](./auth-service)**
+- Managing users? → **[User Service](./user-service)**
+
+Happy building! 🚀
