@@ -10,7 +10,10 @@ services:
       - ./apps/api-gateway/.env
     environment:
       NODE_ENV: production
-      PORT: 3000
+      API_GATEWAY_PORT: 3000
+      AUTH_SERVICE_URL: http://auth:3001
+      USER_SERVICE_URL: http://user:3002
+      API_DOCS_URL: http://api-docs:80
     ports:
       - "3000:3000"
     expose:
@@ -30,7 +33,7 @@ services:
       - ./apps/auth-service/.env
     environment:
       NODE_ENV: production
-      PORT: 3001
+      AUTH_SERVICE_PORT: 3001
     ports:
       - "3001:3001"
     expose:
@@ -50,7 +53,7 @@ services:
       - ./apps/user-service/.env
     environment:
       NODE_ENV: production
-      PORT: 3002
+      USER_SERVICE_PORT: 3002
     ports:
       - "3002:3002"
     expose:
@@ -60,28 +63,6 @@ services:
     read_only: true
     networks:
       - backend
-
-  api-docs:
-    container_name: lms-api-docs
-    build:
-      context: ./apps/api-docs
-      dockerfile: Dockerfile
-    env_file:
-      - ./apps/api-docs/.env
-    environment:
-      NODE_ENV: production
-      PORT: 8080
-    ports:
-      - "8080:8080"
-    expose:
-      - "8080"
-    restart: unless-stopped
-    init: true
-    read_only: true
-    networks:
-      - backend
-      
-
 
 networks:
   backend:

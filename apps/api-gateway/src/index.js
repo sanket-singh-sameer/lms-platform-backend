@@ -13,9 +13,8 @@ app.use(morgan('dev'));
 
 const targets = {
   auth: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
-  user: process.env.USER_SERVICE_URL || "http://localhost:3002"
+  user: process.env.USER_SERVICE_URL || "http://localhost:3002",
 };
-
 
 app.use('/api/auth', createProxyMiddleware({
 	target: targets.auth,

@@ -58,10 +58,10 @@ curl -X GET https://api.lms-platform.com/v1/user \
 Our platform is organized into the following microservices:
 
 ### 3001: Authentication Service
-Handles user authentication, token generation, OAuth integrations, and session management. [View Documentation](./auth-service)
+Handles user authentication, token generation, OAuth integrations, and session management. [View Documentation](./3001-auth-service/congratulations.md)
 
 ### 3002: User Service
-Manages user profiles, roles, permissions, and organization settings. [View Documentation](./user-service)
+Manages user profiles, roles, permissions, and organization settings. [View Documentation](./3002-user-service/manage-docs-versions.md)
 
 ## API Standards
 
@@ -74,8 +74,8 @@ All endpoints follow these conventions:
 
 ## Explore the Documentation
 
-- **[Authentication Service](./auth-service)** — User authentication and token management
-- **[User Service](./user-service)** — User profiles and permissions management
+- **[Authentication Service](./3001-auth-service/congratulations.md)** — User authentication and token management
+- **[User Service](./3002-user-service/manage-docs-versions.md)** — User profiles and permissions management
 - **[Technical Blog](../blog)** — Updates, tutorials, and best practices
 
 ## Support & Community
@@ -88,7 +88,7 @@ All endpoints follow these conventions:
 ## What's Next?
 
 Start by exploring the specific service you need:
-- Setting up authentication? → **[Authentication Service](./auth-service)**
-- Managing users? → **[User Service](./user-service)**
+- Setting up authentication? → **[Authentication Service](./3001-auth-service/congratulations.md)**
+- Managing users? → **[User Service](./3002-user-service/manage-docs-versions.md)**
 
 Happy building! 🚀
