@@ -1,0 +1,101 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AuthRoleName {
+  STUDENT    @map("student")
+  INSTRUCTOR @map("instructor")
+  ADMIN      @map("admin")
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION @map("email_verification")
+  PASSWORD_RESET     @map("password_reset")
+}
+
+//////////////////////////////////////////////////////
+// MODELS
+//////////////////////////////////////////////////////
+
+model AuthUser {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  provider     String   @default("local")
+  providerId   String?  @map("provider_id")
+  isVerified   Boolean  @default(false) @map("is_verified")
+  isActive     Boolean  @default(true)  @map("is_active")
+  deletedAt    DateTime? @map("deleted_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+  sessions           AuthSession[]
+  verificationTokens AuthVerificationToken[]
+  roles              AuthUserRole[]
+
+  @@unique([provider, providerId])
+  @@map("auth_users")
+}
+
+//////////////////////////////////////////////////////
+
+model AuthSession {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId             String   @map("user_id") @db.Uuid
+  refreshTokenHash   String   @map("refresh_token_hash")
+  userAgent          String?  @map("user_agent")
+  ipAddress          String?  @map("ip_address")
+  expiresAt          DateTime @map("expires_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt      @map("updated_at")
+  
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_sessions")
+}
+
+//////////////////////////////////////////////////////
+
+model AuthVerificationToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  token     String
+  type      TokenType
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_verification_tokens")
+}
+
+//////////////////////////////////////////////////////
+
+model AuthRole {
+  id    Int          @id @default(autoincrement())
+  name  AuthRoleName @unique
+  users AuthUserRole[]
+
+  @@map("auth_roles")
+}
+
+//////////////////////////////////////////////////////
+
+model AuthUserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId Int    @map("role_id")
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role AuthRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([userId])
+  @@map("auth_user_roles")
+}
