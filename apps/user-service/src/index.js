@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 import connectDB from './config/db.js';
 import usersRoutes from './routes/users.routes.js';
+import { connectRabbitMQ } from './messaging/rabbitmq.js';
+import { startCreateUserProfileConsumer } from './messaging/consumer.js';
 
 dotenv.config();
 
@@ -21,7 +23,19 @@ app.get('/health', (req, res) => {
 	res.status(200).json({ status: 'ok', service: 'user-service' });
 });
 
-app.listen(PORT, async () => {
-	await connectDB();
-	console.log(`User service listening on port ${PORT}`);
-});
+const startServer = async () => {
+	try {
+		await connectDB();
+		await connectRabbitMQ();
+		await startCreateUserProfileConsumer();
+
+		app.listen(PORT, () => {
+			console.log(`User service listening on port ${PORT}`);
+		});
+	} catch (error) {
+		console.error('Failed to start user service:', error);
+		process.exit(1);
+	}
+};
+
+startServer();

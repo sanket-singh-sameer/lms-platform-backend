@@ -1,6 +1,9 @@
 import { getChannel } from './rabbitmq.js';
+import { UserProfile } from '../models/user-profile.model.js';
+import { UserPreferences } from '../models/user-performance.model.js';
+import { UserStats } from '../models/user-stats.model.js';
 
-export const consumeEvent = async (queueName, callback) => {
+export const consumeEvent = async (queueName, callbackFxn) => {
   try {
     const channel = getChannel();
 
@@ -10,16 +13,82 @@ export const consumeEvent = async (queueName, callback) => {
 
     channel.consume(queueName, async (msg) => {
       if (msg !== null) {
-        const data = JSON.parse(msg.content.toString());
+        try {
+          const data = JSON.parse(msg.content.toString());
 
-        console.log(`📥 Event received from ${queueName}:`, data);
+          console.log(`📥 Event received from ${queueName}:`, data);
 
-        await callback(data);
-
-        channel.ack(msg); // acknowledge message
+          await callbackFxn(data);
+          channel.ack(msg);
+        } catch (error) {
+          console.error(`❌ Failed processing message from ${queueName}:`, error);
+          channel.nack(msg, false, false);
+        }
       }
     });
   } catch (error) {
     console.error('❌ Error consuming event:', error);
   }
+};
+
+const pickDefinedFields = (source, fields) => {
+  const output = {};
+
+  for (const key of fields) {
+    if (source[key] !== undefined && source[key] !== null) {
+      output[key] = source[key];
+    }
+  }
+
+  return output;
+};
+
+const profileFields = [
+  'fullName',
+  'username',
+  'bio',
+  'avatar',
+  'coverImage',
+  'phone',
+  'dateOfBirth',
+  'gender',
+  'location',
+  'socialLinks',
+];
+
+export const startCreateUserProfileConsumer = async () => {
+  await consumeEvent('create_user_profile', async (data) => {
+    const { userId } = data;
+
+    if (!userId) {
+      throw new Error('userId is required in create_user_profile event');
+    }
+
+    const existing = await UserProfile.findOne({ userId }).lean();
+    if (existing) {
+      return;
+    }
+
+    const payload = pickDefinedFields(data, profileFields);
+    if (!payload.fullName) {
+      throw new Error('fullName is required in create_user_profile event');
+    }
+
+    await UserProfile.create({ userId, ...payload });
+
+    await Promise.all([
+      UserPreferences.findOneAndUpdate(
+        { userId },
+        { $setOnInsert: { userId } },
+        { upsert: true, new: true }
+      ),
+      UserStats.findOneAndUpdate(
+        { userId },
+        { $setOnInsert: { userId } },
+        { upsert: true, new: true }
+      ),
+    ]);
+
+    console.log(`✅ User profile created from event for userId: ${userId}`);
+  });
 };

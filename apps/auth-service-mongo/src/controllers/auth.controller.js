@@ -21,10 +21,14 @@ import {
     deleteAuthTokens,
     findValidAuthToken
 } from '../services/auth-token.service.js';
+import { publishEvent } from '../messaging/producer.js';
+
 
 const registerController = async (req, res) => {
     try {
         const { email, password, role, roles } = req.body;
+        const { fullName, username, bio, avatar, coverImage, phone, dateOfBirth, gender, location, socialLinks } = req.body;
+        const userProfileData = { fullName, username, bio, avatar, coverImage, phone, dateOfBirth, gender, location, socialLinks };
 
         if (!email || !password) {
             return res.status(400).json({ message: 'email and password are required' });
@@ -51,7 +55,9 @@ const registerController = async (req, res) => {
 
         const accessToken = buildAccessToken(user);
         const { refreshToken } = await createSession(req, user);
-
+        if(userProfileData.fullName){
+            await publishEvent('create_user_profile', 'auth_service', 'auth_service_key', { userId: user._id, ...userProfileData });
+        }
         return res.status(201).json({
             message: 'User registered successfully',
             user: {

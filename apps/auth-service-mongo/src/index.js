@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.route.js';
 import sessionRoutes from './routes/session.route.js';
 import roleRoutes from './routes/role.route.js';
 import morgan from 'morgan';
+import { connectRabbitMQ } from './messaging/rabbitmq.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 const startServer = async () => {
     try {
         await connectDB();
+        await connectRabbitMQ();
         app.listen(PORT, () => {
             console.log(`Auth service running on port ${PORT}`);
         });
