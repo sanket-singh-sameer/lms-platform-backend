@@ -1,6 +1,6 @@
 import { getChannel } from './rabbitmq.js';
 
-export const consumeEvent = async (queueName, callback) => {
+export const consumeEvent = async (queueName, callbackFxn) => {
   try {
     const channel = getChannel();
 
@@ -14,7 +14,7 @@ export const consumeEvent = async (queueName, callback) => {
 
         console.log(`📥 Event received from ${queueName}:`, data);
 
-        await callback(data);
+        await callbackFxn(data);
 
         channel.ack(msg); // acknowledge message
       }
