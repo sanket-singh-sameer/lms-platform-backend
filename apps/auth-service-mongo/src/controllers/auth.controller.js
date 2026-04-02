@@ -21,7 +21,7 @@ import {
     deleteAuthTokens,
     findValidAuthToken
 } from '../services/auth-token.service.js';
-import { publishEvent } from '../messaging/producer.js';
+import { publishEmailVerficationEmailEvent, publishEvent } from '../messaging/producer.js';
 
 
 const registerController = async (req, res) => {
@@ -50,6 +50,9 @@ const registerController = async (req, res) => {
             provider: 'local',
             roles: roleResult.roles
         });
+
+        // Publish event to send verification email
+        await publishEmailVerficationEmailEvent(user.email);
 
         const accessToken = buildAccessToken(user);
         const { refreshToken } = await createSession(req, user);

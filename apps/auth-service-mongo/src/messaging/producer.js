@@ -1,3 +1,4 @@
+import { requestEmailVerificationFunction } from './helper/email.helper.js';
 import { getChannel } from './rabbitmq.js';
 
 export const publishEvent = async (queueName, exchangeName, exchangeKey, data) => {
@@ -14,4 +15,13 @@ export const publishEvent = async (queueName, exchangeName, exchangeKey, data) =
   } catch (error) {
     console.error('❌ Error publishing event:', error);
   }
+};
+
+
+export const publishEmailVerficationEmailEvent = async (to) => {
+  const queueName = 'send_verification_email';
+  const exchangeName = 'email_exchange';
+  const exchangeKey = 'verification_email';
+  const { verificationToken } = await requestEmailVerificationFunction(to);
+  await publishEvent(queueName, exchangeName, exchangeKey, { to, verificationToken });
 };

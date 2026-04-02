@@ -29,16 +29,21 @@ export const consumeEvent = async (queueName, callbackFxn) => {
   }
 };
 
-export const startEmailConsumer = async () => {
-  const queueName = process.env.EMAIL_SEND_QUEUE || 'send_email';
+
+export const startEmailVerificationEmailConsumer = async () => {
+  const queueName = 'send_verification_email';
 
   await consumeEvent(queueName, async (payload) => {
-    const { to, subject, text, html, cc, bcc, from, replyTo } = payload;
+    const { to, verificationToken } = payload;
 
-    if (!to || !subject || (!text && !html)) {
-      throw new Error('Invalid email payload: to, subject and text/html are required');
+    if (!to || !verificationToken) {
+      throw new Error('Invalid email payload: to and verificationToken are required');
     }
 
-    await sendEmail({ to, subject, text, html, cc, bcc, from, replyTo });
+    const subject = 'Email Verification';
+    const text = `${verificationToken}`;
+
+    await sendEmail({ to, subject, text});
+    console.log(`✅ Verification email sent to ${to} with token: ${verificationToken}`);
   });
-};
+}

@@ -4,13 +4,13 @@ import connectDB from './config/db.js';
 import morgan from 'morgan';
 import { connectRabbitMQ } from './messaging/rabbitmq.js';
 import emailRoutes from './routes/email.routes.js';
-import { startEmailConsumer } from './messaging/consumer.js';
+import { startEmailVerificationEmailConsumer } from './messaging/consumer.js';
 import { verifySMTPConnection } from './config/mail.config.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.EMAIL_SERVICE_PORT || 3004;
+const PORT = process.env.EMAIL_SERVICE_PORT || 3003;
 
 app.use(express.json());
 app.use(morgan('dev'));
@@ -32,7 +32,7 @@ const startServer = async () => {
             console.warn('SMTP verification failed during startup:', smtpError.message);
         }
 
-        await startEmailConsumer();
+        await startEmailVerificationEmailConsumer();
 
         app.listen(PORT, () => {
             console.log(`Email service running on port ${PORT}`);
