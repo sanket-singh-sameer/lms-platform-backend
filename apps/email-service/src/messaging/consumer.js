@@ -47,3 +47,21 @@ export const startEmailVerificationEmailConsumer = async () => {
     console.log(`✅ Verification email sent to ${to} with token: ${verificationToken}`);
   });
 }
+
+export const startPasswordResetEmailConsumer = async () => {
+  const queueName = 'send_password_reset_email';
+
+  await consumeEvent(queueName, async (payload) => {
+    const { to, resetToken } = payload;
+
+    if (!to || !resetToken) {
+      throw new Error('Invalid email payload: to and resetToken are required');
+    }
+
+    const subject = 'Password Reset';
+    const text = `${resetToken}`;
+
+    await sendEmail({ to, subject, text});
+    console.log(`✅ Password reset email sent to ${to} with token: ${resetToken}`);
+  });
+}

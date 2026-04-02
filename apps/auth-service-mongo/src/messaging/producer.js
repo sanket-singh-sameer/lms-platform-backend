@@ -1,4 +1,4 @@
-import { requestEmailVerificationFunction } from './helper/email.helper.js';
+import { requestEmailVerificationFunction, requestPasswordResetFunction } from './helper/email.helper.js';
 import { getChannel } from './rabbitmq.js';
 
 export const publishEvent = async (queueName, exchangeName, exchangeKey, data) => {
@@ -24,4 +24,12 @@ export const publishEmailVerficationEmailEvent = async (to) => {
   const exchangeKey = 'verification_email';
   const { verificationToken } = await requestEmailVerificationFunction(to);
   await publishEvent(queueName, exchangeName, exchangeKey, { to, verificationToken });
+};
+
+export const publishPasswordResetEmailEvent = async (to) => {
+  const queueName = 'send_password_reset_email';
+  const exchangeName = 'email_exchange';
+  const exchangeKey = 'password_reset_email';
+  const { resetToken } = await requestPasswordResetFunction(to);
+  await publishEvent(queueName, exchangeName, exchangeKey, { to, resetToken });
 };

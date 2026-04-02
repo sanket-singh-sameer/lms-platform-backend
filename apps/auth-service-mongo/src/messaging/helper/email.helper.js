@@ -1,5 +1,5 @@
 import { AuthUser } from '../../models/auth-user.model.js';
-import { EMAIL_VERIFICATION_EXPIRES_MS } from '../../constants/auth.constants.js';
+import { EMAIL_VERIFICATION_EXPIRES_MS, PASSWORD_RESET_EXPIRES_MS } from '../../constants/auth.constants.js';
 import {
     createAuthToken,
     deleteAuthTokens,
@@ -35,5 +35,35 @@ export const requestEmailVerificationFunction = async (to) => {
         return { message: 'Email verification token generated successfully', verificationToken: token };
     } catch (error) {
         throw new Error(`Failed to generate email verification token: ${error.message}`);
+    }
+};
+
+
+export const requestPasswordResetFunction = async (to) => {
+    try {
+        const email = to;
+
+        if (!email) {
+            throw new Error('email is required');
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const user = await AuthUser.findOne({ email: normalizedEmail });
+
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        await deleteAuthTokens({ userId: user._id, type: 'password_reset' });
+
+        const token = await createAuthToken({
+            userId: user._id,
+            type: 'password_reset',
+            expiresInMs: PASSWORD_RESET_EXPIRES_MS
+        });
+
+        return { message: 'Password reset token generated successfully', resetToken: token };
+    } catch (error) {
+        throw new Error(`Failed to generate password reset token: ${error.message}`);
     }
 };

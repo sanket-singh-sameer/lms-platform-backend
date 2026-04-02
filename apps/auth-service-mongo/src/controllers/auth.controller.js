@@ -21,7 +21,7 @@ import {
     deleteAuthTokens,
     findValidAuthToken
 } from '../services/auth-token.service.js';
-import { publishEmailVerficationEmailEvent, publishEvent } from '../messaging/producer.js';
+import { publishEmailVerficationEmailEvent, publishEvent, publishPasswordResetEmailEvent } from '../messaging/producer.js';
 
 
 const registerController = async (req, res) => {
@@ -377,32 +377,9 @@ const verifyEmailController = async (req, res) => {
 
 const requestPasswordResetController = async (req, res) => {
     try {
-        const { email } = req.body;
-
-        if (!email) {
-            return res.status(400).json({ message: 'email is required' });
-        }
-
-        const normalizedEmail = email.toLowerCase().trim();
-        const user = await AuthUser.findOne({ email: normalizedEmail });
-
-        if (!user) {
-            return res.status(200).json({
-                message: 'If the account exists, a password reset token has been generated'
-            });
-        }
-
-        await deleteAuthTokens({ userId: user._id, type: 'password_reset' });
-
-        const token = await createAuthToken({
-            userId: user._id,
-            type: 'password_reset',
-            expiresInMs: PASSWORD_RESET_EXPIRES_MS
-        });
-
+        await publishPasswordResetEmailEvent(req.body.email);
         return res.status(200).json({
-            message: 'Password reset token generated successfully',
-            resetToken: token
+            message: 'Password reset token generated successfully'
         });
     } catch (error) {
         return res.status(500).json({ message: 'Failed to generate password reset token', error: error.message });
