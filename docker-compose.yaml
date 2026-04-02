@@ -27,10 +27,10 @@ services:
   auth:
     container_name: lms-auth-service
     build:
-      context: ./apps/auth-service
+      context: ./apps/auth-service-mongo
       dockerfile: Dockerfile
     env_file:
-      - ./apps/auth-service/.env
+      - ./apps/auth-service-mongo/.env
     environment:
       NODE_ENV: production
       AUTH_SERVICE_PORT: 3001
@@ -58,6 +58,26 @@ services:
       - "3002:3002"
     expose:
       - "3002"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+
+  email:
+    container_name: lms-email-service
+    build:
+      context: ./apps/email-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/email-service/.env
+    environment:
+      NODE_ENV: production
+      EMAIL_SERVICE_PORT: 3003
+    ports:
+      - "3003:3003"
+    expose:
+      - "3003"
     restart: unless-stopped
     init: true
     read_only: true
