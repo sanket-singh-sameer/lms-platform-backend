@@ -2,24 +2,26 @@ import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import connectDB from './config/db.js';
-import usersRoutes from './routes/users.routes.js';
+import courseRoutes from './routes/course.routes.js';
 import { connectRabbitMQ } from './messaging/rabbitmq.js';
+import { startUserDeletedConsumer } from './messaging/consumer.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.USER_SERVICE_PORT || 3002;
+const PORT = process.env.COURSE_SERVICE_PORT || process.env.USER_SERVICE_PORT || 3004;
 
 app.use(express.json());
 app.use(morgan('dev'));
-app.use('/users', usersRoutes);
 
 app.get('/', (req, res) => {
-	res.json({ message: 'Welcome to the User Service' });
+    res.status(200).json({ message: 'Course service is running' });
 });
 
+app.use('/courses', courseRoutes);
+
 app.get('/health', (req, res) => {
-	res.status(200).json({ status: 'ok', service: 'user-service' });
+	res.status(200).json({ status: 'ok', service: 'course-service' });
 });
 
 app.use('/', (req, res) => {
@@ -35,12 +37,13 @@ const startServer = async () => {
 	try {
 		await connectDB();
 		await connectRabbitMQ();
+		await startUserDeletedConsumer();
 
 		app.listen(PORT, () => {
-			console.log(`User service listening on port ${PORT}`);
+			console.log(`Course service listening on port ${PORT}`);
 		});
 	} catch (error) {
-		console.error('Failed to start user service:', error);
+		console.error('Failed to start course service:', error);
 		process.exit(1);
 	}
 };

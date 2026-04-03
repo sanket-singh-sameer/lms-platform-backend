@@ -15,12 +15,25 @@ const PORT = process.env.AUTH_SERVICE_PORT || 3001;
 app.use(express.json());
 app.use(morgan('dev'));
 
+app.get('/', (req, res) => {
+    res.status(200).send('Welcome to the Auth Service');
+});
+
 app.use('/auth', authRoutes);
 app.use('/sessions', sessionRoutes);
 app.use('/roles', roleRoutes);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Auth service is healthy' });
+});
+
+app.use('/', (req, res) => {
+    res.status(404).json({ status: 'ERROR', message: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ status: 'ERROR', message: 'Internal Server Error' });
 });
 
 const startServer = async () => {

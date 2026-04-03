@@ -13,6 +13,7 @@ services:
       API_GATEWAY_PORT: 3000
       AUTH_SERVICE_URL: http://auth:3001
       USER_SERVICE_URL: http://user:3002
+      COURSE_SERVICE_URL: http://course:3004
       API_DOCS_URL: http://api-docs:80
     ports:
       - "3000:3000"
@@ -58,6 +59,26 @@ services:
       - "3002:3002"
     expose:
       - "3002"
+    restart: unless-stopped
+    init: true
+    read_only: true
+    networks:
+      - backend
+
+  course:
+    container_name: lms-course-service
+    build:
+      context: ./apps/course-service
+      dockerfile: Dockerfile
+    env_file:
+      - ./apps/course-service/.env
+    environment:
+      NODE_ENV: production
+      COURSE_SERVICE_PORT: 3004
+    ports:
+      - "3004:3004"
+    expose:
+      - "3004"
     restart: unless-stopped
     init: true
     read_only: true

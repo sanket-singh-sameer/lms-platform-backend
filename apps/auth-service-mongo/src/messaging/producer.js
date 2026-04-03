@@ -33,3 +33,10 @@ export const publishPasswordResetEmailEvent = async (to) => {
   const { resetToken } = await requestPasswordResetFunction(to);
   await publishEvent(queueName, exchangeName, exchangeKey, { to, resetToken });
 };
+
+export const publishUserDeletedEvent = async ({ userId, email }) => {
+  const queueName = 'user_deleted_course_service';
+  const exchangeName = 'course.exchange';
+  const exchangeKey = 'user.deleted';
+  await publishEvent(queueName, exchangeName, exchangeKey, { userId, email });
+};

@@ -21,7 +21,7 @@ import {
     deleteAuthTokens,
     findValidAuthToken
 } from '../services/auth-token.service.js';
-import { publishEmailVerficationEmailEvent, publishEvent, publishPasswordResetEmailEvent } from '../messaging/producer.js';
+import { publishEmailVerficationEmailEvent, publishPasswordResetEmailEvent, publishUserDeletedEvent } from '../messaging/producer.js';
 
 
 const registerController = async (req, res) => {
@@ -422,6 +422,35 @@ const resetPasswordController = async (req, res) => {
     }
 };
 
+const deleteUserController = async (req, res) => {
+    try {
+        const accessToken = extractAccessToken(req);
+        const userId = getUserIdFromAccessToken(accessToken);
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Valid access token is required' });
+        }
+
+        const user = await AuthUser.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        await Promise.all([
+            deleteAllUserSessions(user._id),
+            deleteAuthTokens({ userId: user._id, type: 'email_verification' }),
+            deleteAuthTokens({ userId: user._id, type: 'password_reset' }),
+            AuthUser.deleteOne({ _id: user._id })
+        ]);
+
+        await publishUserDeletedEvent({ userId: String(user._id), email: user.email });
+
+        return res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        return res.status(500).json({ message: 'Failed to delete user', error: error.message });
+    }
+};
+
 export {
     registerController,
     loginController,
@@ -433,5 +462,6 @@ export {
     requestEmailVerificationController,
     verifyEmailController,
     requestPasswordResetController,
-    resetPasswordController
+    resetPasswordController,
+    deleteUserController
 };

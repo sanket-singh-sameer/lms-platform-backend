@@ -9,6 +9,7 @@ import {
 	requestPasswordResetController,
 	resetPasswordController,
 	refreshTokenController,
+	deleteUserController,
 	registerController,
 	verifyEmailController
 } from '../controllers/auth.controller.js';
@@ -24,6 +25,7 @@ authRoutes.post('/oauth', oauthController);
 authRoutes.post('/logout', logoutController);
 authRoutes.post('/logout-all', logoutAllController);
 authRoutes.get('/me', meController);
+authRoutes.delete('/me', deleteUserController);
 
 authRoutes.post('/refresh', refreshTokenController);
 authRoutes.post('/verify-email', verifyEmailController);

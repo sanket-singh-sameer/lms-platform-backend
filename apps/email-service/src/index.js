@@ -14,11 +14,25 @@ const PORT = process.env.EMAIL_SERVICE_PORT || 3003;
 
 app.use(express.json());
 app.use(morgan('dev'));
+
+app.get('/', (req, res) => {
+    res.status(200).send('Welcome to the Email Service');
+});
+
 app.use('/emails', emailRoutes);
 
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Email service is healthy' });
+});
+
+app.use('/', (req, res) => {
+    res.status(404).json({ status: 'ERROR', message: 'Route not found' });
+});
+
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({ status: 'ERROR', message: 'Internal Server Error' });
 });
 
 const startServer = async () => {
