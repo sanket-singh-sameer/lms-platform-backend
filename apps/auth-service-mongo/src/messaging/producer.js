@@ -35,8 +35,8 @@ export const publishPasswordResetEmailEvent = async (to) => {
 };
 
 export const publishUserDeletedEvent = async ({ userId, email }) => {
-  const queueName = 'user_deleted_course_service';
-  const exchangeName = 'course.exchange';
-  const exchangeKey = 'user.deleted';
-  await publishEvent(queueName, exchangeName, exchangeKey, { userId, email });
+  await Promise.all([
+    publishEvent('user_deleted_course_service', 'course.exchange', 'user.deleted', { userId, email }),
+    publishEvent('user_deleted_payment_service', 'payment.exchange', 'user.deleted', { userId, email }),
+  ]);
 };

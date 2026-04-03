@@ -15,6 +15,7 @@ const targets = {
   auth: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
   user: process.env.USER_SERVICE_URL || "http://localhost:3002",
 	course: process.env.COURSE_SERVICE_URL || "http://localhost:3004",
+	payment: process.env.PAYMENT_SERVICE_URL || "http://localhost:3005",
   email: process.env.EMAIL_SERVICE_URL || "http://localhost:3003",
 };
 
@@ -32,6 +33,11 @@ app.use('/api/course', createProxyMiddleware({
 	target: targets.course,
 	changeOrigin: true,
 	pathRewrite: {'^/api/course': ''}
+}));
+app.use('/api/payment', createProxyMiddleware({
+	target: targets.payment,
+	changeOrigin: true,
+	pathRewrite: {'^/api/payment': ''}
 }));
 app.use('/api/email', createProxyMiddleware({
 	target: targets.email,
