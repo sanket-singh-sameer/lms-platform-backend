@@ -4,7 +4,12 @@ import connectDB from './config/db.js';
 import morgan from 'morgan';
 import { connectRabbitMQ } from './messaging/rabbitmq.js';
 import emailRoutes from './routes/email.routes.js';
-import { startEmailVerificationEmailConsumer, startPasswordResetEmailConsumer } from './messaging/consumer.js';
+import {
+    startCourseEnrollmentSuccessEmailConsumer,
+    startEmailVerificationEmailConsumer,
+    startPaymentEventsEmailConsumer,
+    startPasswordResetEmailConsumer,
+} from './messaging/consumer.js';
 import { verifySMTPConnection } from './config/mail.config.js';
 
 dotenv.config();
@@ -48,6 +53,8 @@ const startServer = async () => {
 
         await startEmailVerificationEmailConsumer();
         await startPasswordResetEmailConsumer();
+        await startCourseEnrollmentSuccessEmailConsumer();
+        await startPaymentEventsEmailConsumer();
 
         app.listen(PORT, () => {
             console.log(`Email service running on port ${PORT}`);

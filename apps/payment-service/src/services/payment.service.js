@@ -22,7 +22,7 @@ export const createPaymentOrder = async ({ userId, payload }) => {
   if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
     throw new Error('Valid courseId is required');
   }
-
+  
   const numericAmount = Number(amount);
   if (!Number.isInteger(numericAmount) || numericAmount < 1) {
     throw new Error('amount must be an integer in the smallest currency unit');

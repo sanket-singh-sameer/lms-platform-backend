@@ -11,7 +11,8 @@ import {
 	refreshTokenController,
 	deleteUserController,
 	registerController,
-	verifyEmailController
+	verifyEmailController,
+	getUserEmailByIdController
 } from '../controllers/auth.controller.js';
 
 
@@ -28,6 +29,7 @@ authRoutes.get('/me', meController);
 authRoutes.delete('/me', deleteUserController);
 
 authRoutes.post('/refresh', refreshTokenController);
+authRoutes.get('/users/:userId/email', getUserEmailByIdController);
 authRoutes.post('/verify-email', verifyEmailController);
 authRoutes.post('/resend-verification', requestEmailVerificationController);
 authRoutes.post('/forgot-password', requestPasswordResetController);

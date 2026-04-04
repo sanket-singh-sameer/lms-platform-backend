@@ -1,6 +1,7 @@
 import { getChannel } from './rabbitmq.js';
 import mongoose from 'mongoose';
 import { Enrollment } from '../models/enrollment.model.js';
+import { enrollUserFromPaymentEvent } from './helper/course.helper.js';
 
 export const consumeEvent = async (queueName, callbackFxn) => {
   try {
@@ -41,5 +42,15 @@ export const startUserDeletedConsumer = async () => {
     await Enrollment.deleteMany({ userId });
 
     console.log(`✅ Removed enrollments for deleted user: ${userId}`);
+  });
+};
+
+
+export const startCourseEnrollmentConsumer = async () => {
+  await consumeEvent('course_enrollment_requests', async (data) => {
+    const enrollment = await enrollUserFromPaymentEvent(data);
+    console.log(
+      `✅ Enrollment processed from queue: userId=${String(enrollment.userId)} courseId=${String(enrollment.courseId)}`
+    );
   });
 };

@@ -43,13 +43,6 @@ export const createCourseController = async (req, res) => {
 
     const course = await createCourse({ payload: req.body, instructorId: auth.userId });
 
-    await publishEvent('course_events', 'course.exchange', 'course.created', {
-      courseId: course._id,
-      instructorId: auth.userId,
-      title: course.title,
-      slug: course.slug,
-    });
-
     return res.status(201).json(course);
   } catch (error) {
     return res.status(500).json({ message: error.message || 'Failed to create course.' });
@@ -100,11 +93,6 @@ export const updateCourseController = async (req, res) => {
       return res.status(404).json({ message: 'Course not found or not owned by you.' });
     }
 
-    await publishEvent('course_events', 'course.exchange', 'course.updated', {
-      courseId: updated._id,
-      instructorId: auth.userId,
-    });
-
     return res.status(200).json(updated);
   } catch (error) {
     return res.status(500).json({ message: error.message || 'Failed to update course.' });
@@ -124,11 +112,6 @@ export const deleteCourseController = async (req, res) => {
       return res.status(404).json({ message: 'Course not found or not owned by you.' });
     }
 
-    await publishEvent('course_events', 'course_exchange', 'course_deleted', {
-      courseId: deleted._id,
-      instructorId: auth.userId,
-    });
-
     return res.status(200).json({ message: 'Course deleted successfully.' });
   } catch (error) {
     return res.status(500).json({ message: 'Failed to delete course.', error: error.message });
@@ -147,12 +130,6 @@ export const publishCourseController = async (req, res) => {
     if (!published) {
       return res.status(404).json({ message: 'Course not found or not owned by you.' });
     }
-
-    await publishEvent('course_events', 'course.exchange', 'course.published', {
-      courseId: published._id,
-      instructorId: auth.userId,
-      publishedAt: published.publishedAt,
-    });
 
     return res.status(200).json(published);
   } catch (error) {
@@ -230,12 +207,6 @@ export const updateMyCourseProgressController = async (req, res) => {
       userId: auth.userId,
       completedLessons,
       totalLessons,
-    });
-
-    await publishEvent('course_events', 'course.exchange', 'course.progress.updated', {
-      courseId,
-      userId: auth.userId,
-      progressPercent: enrollment.progressPercent,
     });
 
     return res.status(200).json(enrollment);

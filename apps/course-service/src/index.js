@@ -4,7 +4,7 @@ import morgan from 'morgan';
 import connectDB from './config/db.js';
 import courseRoutes from './routes/course.routes.js';
 import { connectRabbitMQ } from './messaging/rabbitmq.js';
-import { startUserDeletedConsumer } from './messaging/consumer.js';
+import { startCourseEnrollmentConsumer, startUserDeletedConsumer } from './messaging/consumer.js';
 
 dotenv.config();
 
@@ -38,6 +38,7 @@ const startServer = async () => {
 		await connectDB();
 		await connectRabbitMQ();
 		await startUserDeletedConsumer();
+		await startCourseEnrollmentConsumer();
 
 		app.listen(PORT, () => {
 			console.log(`Course service listening on port ${PORT}`);

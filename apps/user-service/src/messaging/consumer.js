@@ -1,7 +1,9 @@
 import { getChannel } from './rabbitmq.js';
+import mongoose from 'mongoose';
 import { UserProfile } from '../models/user-profile.model.js';
 import { UserPreferences } from '../models/user-performance.model.js';
 import { UserStats } from '../models/user-stats.model.js';
+import { UserCourseEnrollment } from '../models/user-course-enrollment.model.js';
 
 export const consumeEvent = async (queueName, callbackFxn) => {
   try {
@@ -90,5 +92,54 @@ export const startCreateUserProfileConsumer = async () => {
     ]);
 
     console.log(`✅ User profile created from event for userId: ${userId}`);
+  });
+};
+
+export const startCourseEnrollmentSuccessConsumer = async () => {
+  await consumeEvent('course_enrollment_success', async (data) => {
+    const { userId, courseId, enrollmentId = null, paymentId = null } = data || {};
+
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      throw new Error('Valid userId is required in course_enrollment_success event');
+    }
+
+    if (!courseId || !mongoose.Types.ObjectId.isValid(courseId)) {
+      throw new Error('Valid courseId is required in course_enrollment_success event');
+    }
+
+    const enrollmentUpsertResult = await UserCourseEnrollment.updateOne(
+      { userId, courseId },
+      {
+        $setOnInsert: {
+          userId,
+          courseId,
+        },
+        $set: {
+          enrollmentId: enrollmentId && mongoose.Types.ObjectId.isValid(enrollmentId) ? enrollmentId : null,
+          paymentId: paymentId && mongoose.Types.ObjectId.isValid(paymentId) ? paymentId : null,
+        },
+      },
+      { upsert: true }
+    );
+
+    await UserStats.findOneAndUpdate(
+      { userId },
+      enrollmentUpsertResult.upsertedCount === 1
+        ? {
+            $setOnInsert: { userId },
+            $inc: { enrolledCourses: 1 },
+          }
+        : {
+            $setOnInsert: { userId },
+          },
+      { upsert: true, new: true }
+    );
+
+    if (enrollmentUpsertResult.upsertedCount === 1) {
+      console.log(`✅ User stats updated for new enrollment: userId=${userId} courseId=${courseId}`);
+      return;
+    }
+
+    console.log(`ℹ️ Enrollment already processed for userId=${userId} courseId=${courseId}`);
   });
 };

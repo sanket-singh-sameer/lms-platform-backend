@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
 import { AuthUser } from '../models/auth-user.model.js';
 import {
     buildAccessToken,
@@ -451,6 +452,32 @@ const deleteUserController = async (req, res) => {
     }
 };
 
+const getUserEmailByIdController = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({ message: 'Valid userId is required' });
+        }
+
+        const user = await AuthUser.findById(userId).select('email isActive');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (!user.isActive) {
+            return res.status(403).json({ message: 'User account is disabled' });
+        }
+
+        return res.status(200).json({
+            userId: String(user._id),
+            email: user.email,
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Failed to fetch user email', error: error.message });
+    }
+};
+
 export {
     registerController,
     loginController,
@@ -463,5 +490,6 @@ export {
     verifyEmailController,
     requestPasswordResetController,
     resetPasswordController,
-    deleteUserController
+    deleteUserController,
+    getUserEmailByIdController
 };

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razorpay Payment</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 760px;
+      margin: 40px auto;
+      padding: 24px;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 10px 28px rgba(17, 24, 39, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 26px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    label {
+      font-weight: 600;
+      display: grid;
+      gap: 4px;
+    }
+
+    input {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    button {
+      margin-top: 6px;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      background: #111827;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    #status {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #eef2ff;
+      color: #1e3a8a;
+      white-space: pre-wrap;
+      font-size: 14px;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Razorpay Payment Gateway Integration</h1>
+    <form id="payment-form">
+      <label for="apiBaseUrl">Payment Service URL
+        <input type="text" id="apiBaseUrl" value="http://localhost:3005" required>
+      </label>
+
+      <label for="userId">User ID (Mongo ObjectId)
+        <input type="text" id="userId" value="507f1f77bcf86cd799439011" required>
+      </label>
+
+      <label for="courseId">Course ID (Mongo ObjectId)
+        <input type="text" id="courseId" value="507f1f77bcf86cd799439012" required>
+      </label>
+
+      <label for="amount">Amount (smallest unit, eg 50000 = INR 500)
+        <input type="number" id="amount" name="amount" value="50000" min="1" required>
+      </label>
+
+      <button type="submit" id="payBtn">Pay Now</button>
+    </form>
+
+    <div id="status">Ready</div>
+  </div>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    const form = document.getElementById('payment-form');
+    const payBtn = document.getElementById('payBtn');
+    const statusNode = document.getElementById('status');
+
+    const setStatus = (message, isError = false) => {
+      statusNode.style.background = isError ? '#fee2e2' : '#eef2ff';
+      statusNode.style.color = isError ? '#991b1b' : '#1e3a8a';
+      statusNode.textContent = message;
+    };
+
+    async function callPaymentService(url, userId, body) {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': userId,
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Request failed');
+      }
+
+      return data;
+    }
+
+    async function payNow(event) {
+      event.preventDefault();
+      payBtn.disabled = true;
+
+      try {
+        const apiBaseUrl = document.getElementById('apiBaseUrl').value.trim().replace(/\/$/, '');
+        const userId = document.getElementById('userId').value.trim();
+        const courseId = document.getElementById('courseId').value.trim();
+        const amount = Number(document.getElementById('amount').value);
+
+        setStatus('Creating order in payment-service...');
+
+        const createOrderResponse = await callPaymentService(
+          `${apiBaseUrl}/payments/orders`,
+          userId,
+          {
+            courseId,
+            amount,
+            currency: 'INR',
+            notes: { source: 'razorpay-test-page' },
+          }
+        );
+
+        const paymentId = createOrderResponse.payment?._id;
+        const order = createOrderResponse.order;
+        const keyId = createOrderResponse.keyId;
+
+        if (!paymentId || !order?.id || !keyId) {
+          throw new Error('Incomplete order response from payment-service');
+        }
+
+        setStatus('Order created. Opening Razorpay checkout...');
+
+        const options = {
+          key: keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'LMS Payment Test',
+          description: 'Course Purchase',
+          order_id: order.id,
+          prefill: {
+            name: 'Test User',
+            email: 'test@example.com',
+            contact: '9999999999',
+          },
+          theme: {
+            color: '#1d4ed8',
+          },
+          handler: async function (razorpayResponse) {
+            try {
+              setStatus('Payment authorized. Verifying with payment-service...');
+
+              const verifyResponse = await callPaymentService(
+                `${apiBaseUrl}/payments/verify`,
+                userId,
+                {
+                  paymentId,
+                  razorpay_order_id: razorpayResponse.razorpay_order_id,
+                  razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                  razorpay_signature: razorpayResponse.razorpay_signature,
+                }
+              );
+
+              setStatus(`Payment verified successfully.\n\n${JSON.stringify(verifyResponse, null, 2)}`);
+            } catch (error) {
+              setStatus(`Verification failed: ${error.message}`, true);
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              setStatus('Checkout closed before payment completion.', true);
+            },
+          },
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (response) {
+          const reason = response.error?.description || 'Payment failed';
+          setStatus(`Razorpay error: ${reason}`, true);
+        });
+
+        rzp.open();
+      } catch (error) {
+        setStatus(`Unable to start payment: ${error.message}`, true);
+      } finally {
+        payBtn.disabled = false;
+      }
+    }
+
+    form.addEventListener('submit', payNow);
+  </script>
+</body>
+</html>
